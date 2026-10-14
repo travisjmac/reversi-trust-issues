@@ -544,8 +544,19 @@
     }
 
     function onKey(e) {
-      var key, onButton;
+      var key, onButton, inCreditsUi;
       if (dead) return;
+      inCreditsUi = !!(e.target && e.target.closest && e.target.closest("[data-credits]"));
+      if (creditsOpen) {
+        if (e.key === "Escape") {
+          e.preventDefault();
+          closeCredits();
+        } else if (!inCreditsUi) {
+          e.preventDefault();
+        }
+        return;
+      }
+      if (inCreditsUi && e.key !== "Escape") return;
       if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT")) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       key = e.key;
@@ -603,6 +614,34 @@
     undoBtn.addEventListener("click", function () { undo(); root.focus({ preventScroll: true }); });
     passBtn.addEventListener("click", function () { doPass(); root.focus({ preventScroll: true }); });
     restartBtn.addEventListener("click", function () { restart(); root.focus({ preventScroll: true }); });
+    var creditsBtn = root.querySelector("button[data-credits]");
+    var creditsLayer = root.querySelector(".rti-credits");
+    var creditsClose = root.querySelector(".rti-credits-close");
+    var creditsOpen = false;
+    function openCredits() {
+      creditsOpen = true;
+      creditsLayer.hidden = false;
+      creditsBtn.setAttribute("aria-expanded", "true");
+      creditsClose.focus();
+    }
+    function closeCredits() {
+      if (!creditsOpen) return;
+      creditsOpen = false;
+      creditsLayer.hidden = true;
+      creditsBtn.setAttribute("aria-expanded", "false");
+      creditsBtn.focus({ preventScroll: true });
+    }
+    creditsBtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      openCredits();
+    });
+    creditsClose.addEventListener("click", function (e) {
+      e.stopPropagation();
+      closeCredits();
+    });
+    creditsLayer.addEventListener("click", function (e) {
+      if (e.target === creditsLayer) closeCredits();
+    });
     window.addEventListener("keydown", onKey);
 
     restart();
@@ -765,6 +804,13 @@
       ".rti-cursor{color:#f0d7a2;font-variant-numeric:tabular-nums;}",
       ".rti-aside{min-height:2.2em;color:#f6f0e4;}",
       ".rti-help{color:#e4d3b8;font-size:.82rem;}",
+      ".rti-credits{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(8,4,16,.78);}",
+      ".rti-credits[hidden]{display:none !important;}",
+      ".rti-credits-card{width:min(28rem,100%);max-height:min(84vh,560px);overflow:auto;background:#f7f9ff;color:#1c1917;border:4px solid #7ea2e8;border-radius:18px;padding:16px 18px 18px;box-shadow:0 14px 0 rgba(0,0,0,.28);text-align:center;user-select:text;}",
+      ".rti .rti-credits-card .rti-credits-name{margin:0 0 8px;font:700 1.15rem/1.3 Georgia,'Times New Roman',serif;color:#142033;}",
+      ".rti .rti-credits-card p{margin:0 0 8px;font:600 15px/1.45 'Segoe UI',system-ui,sans-serif;color:#1c1917;text-align:center;}",
+      ".rti .rti-credits-card a{color:#1d4ed8;}",
+      ".rti .rti-credits-close{margin-top:6px;font:700 14px/1 'Segoe UI',system-ui,sans-serif;color:#fff8ea;background:#146b45;border:2px solid #e0b56a;border-radius:999px;padding:7px 14px;cursor:pointer;box-shadow:none;}",
       "@media (max-width:560px){.rti{padding:8px 8px 12px}.rti-count{font-size:1.35rem}.rti-stage{width:min(100%,70vw)}}"
     ].join("");
   }
@@ -836,9 +882,19 @@
       '<button type="button" data-act="undo">Undo</button>',
       '<button type="button" data-act="pass">Pass</button>',
       '<button type="button" data-act="restart">Restart</button>',
+      '<button type="button" data-act="credits" data-credits aria-haspopup="dialog" aria-expanded="false">Credits</button>',
       "</div>",
       '<p class="rti-help">Arrows move the cursor. Enter or Space places. H hint. U undo. P passes only when there is no legal move. R restart. Esc quits. Squares are a1 at the top left through h8.</p>',
-      "</div>"
+      "</div>",
+      '<div class="rti-credits" data-credits hidden>',
+      '<div class="rti-credits-card" role="dialog" aria-modal="true" aria-label="Credits">',
+      '<p class="rti-credits-name">Travis MacDonald</p>',
+      '<p><a href="https://travisjmac.com">https://travisjmac.com</a></p>',
+      '<p><a href="mailto:travis@travisjmac.com">travis@travisjmac.com</a></p>',
+      "<p>Hope you like these. They were fun to make.</p>",
+      "<p>Use that urge to create. Building something you care about lasts longer than tearing something down. Enjoy these, then go make your own.</p>",
+      '<button type="button" class="rti-credits-close">Close</button>',
+      "</div></div>"
     ].join("");
   }
 
